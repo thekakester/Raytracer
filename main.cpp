@@ -3,11 +3,14 @@
 #include "triangle.h"
 #include "sphere.h"
 #include "vec3.h"
+#include "ray.h"
+#include "math.h"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 600
-#define HEIGHT 400
+#define WIDTH 1400
+#define HEIGHT 900
 #define FILENAME "output.png"
 
 
@@ -16,10 +19,11 @@ using namespace std;
 //PROTOTYPES START
 void traceRays();
 void setupWorld();
-Vec3 shootRay(Vec3, Vec3, int);
+Vec3 shootRay(Ray, int);
 //PROTOTYPES END!
 
 Vec3 cameraPosition = Vec3(0,0,0);
+Vec3 light = Vec3(3,5,-15);
 char image[WIDTH*HEIGHT*3];
 
 vector<Sphere> spheres;
@@ -53,7 +57,7 @@ void setupWorld() {
 	// make a Material which is reflective
 	Material refl;
 	refl.reflective = 1;
-	refl.color = Vec3(0,0,0); // color is not used when Material is reflective!
+	refl.color = Vec3(0,0,1); // color is not used when Material is reflective!
 
 	// make several diffuse Materials to choose from
 	Material red;
@@ -65,6 +69,11 @@ void setupWorld() {
 	Material white;
 	white.reflective = 0;
 	white.color = Vec3(1,1,1);
+	
+	//Light yellow!
+	Material yellow;
+	yellow.reflective = 0;
+	yellow.color = Vec3(1,1,0);
 
 	// create three Spheres
 	Sphere sph1;
@@ -80,7 +89,16 @@ void setupWorld() {
 	sph3.radius = 1;
 	sph3.mat = red;
 
+
+	//Add a sphere at the light
+	Sphere lightSphere;
+	lightSphere.pos = light;
+	lightSphere.mat = yellow;
+	lightSphere.radius = 0.05f;
+
 	//Add the spheres to our vector
+	//NOTE!  (Sphere at position 0 in vector does not have light act on it!)
+	spheres.push_back(lightSphere);
 	spheres.push_back(sph1);
 	spheres.push_back(sph2);
 	spheres.push_back(sph3);
@@ -134,11 +152,11 @@ void traceRays() {
 			Vec3 imagePixel = Vec3(xCoord,yCoord,zCoord);
 			
 			//Create a ray from the camera to the imagePixel
-			Vec3 ray = cameraPosition.rayTo(imagePixel);
+			Ray ray = Ray(cameraPosition,imagePixel);
 
 			//Recursively shoot ray and get back a color!
 			//Pass in 0 to represent that we have performed 0 iterations so far
-			Vec3 color = shootRay(cameraPosition,ray,0);
+			Vec3 color = shootRay(ray,0);
 
 			//Convert values of 0.0 to 1.0 to 0-255
 			color.x *= 255;
@@ -158,7 +176,7 @@ void traceRays() {
 a color.  This is recursive, so it could potentially go deeper!
 Only do up to 1000 recurses before deciding to return black!
 **/
-Vec3 shootRay(Vec3 origin, Vec3 direction, int iteration) {
+Vec3 shootRay(Ray ray, int iteration) {
 
 	//If we recursed too many times
 	if (iteration > 0) {
@@ -167,11 +185,42 @@ Vec3 shootRay(Vec3 origin, Vec3 direction, int iteration) {
 
 	//Loop over every sphere and check for collision!
 	for (unsigned int i = 0; i < spheres.size(); i++) {
-		if (spheres.at(i).intersectsRay(origin,direction)) {
-			return Vec3(1,1,1);
+		Sphere sphere = spheres.at(i);
+		//printf("Ray/Sphere collision: Ray <%.2f,%.2f,%.2f><%.2f,%.2f,%.2f> Sphere[<%.2f,%.2f,%.2f> r:%.2f]\n",ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, sphere.pos.x, sphere.pos.y, sphere.pos.z, sphere.radius);
+
+		float d = sphere.intersectsRay(ray);
+		if (d >= 0) {
+			//Return the color of the sphere dotted with the normal
+			Vec3 intersectionPoint = ray.pointAtDistance(d);
+
+			//printf("Intersect at point <%.2f,%.2f,%.2f>\n",intersectionPoint.x, intersectionPoint.y, intersectionPoint.z);
+		
+			//Check if we can see the light
+			//Create a ray from the point to the light
+			Ray rayToLight = Ray(intersectionPoint,light);
+
+			bool seesLight = true;	//Set to false if intersects
+
+			//Check if we hit anything
+			for (unsigned int j = 1; j < spheres.size(); j++) {
+				if (i==j) { continue; }
+				
+				//If we intersect
+				float dist = spheres.at(j).intersectsRay(rayToLight);
+				if (dist >= 0) {
+					seesLight = false; //We failed!
+					break;
+				}
+			}
+
+			if (seesLight) {
+				return sphere.mat.color;
+			} else {
+				return sphere.mat.color.multiplyByScalar(0.2f);
+			}
 		}
 	}
 	
 	//Recurse!
-	return shootRay(origin, direction, iteration+1);
+	return shootRay(ray, iteration+1);
 }

@@ -3,12 +3,13 @@
 
 #include "vec3.h"
 #include "material.h"
+#include "ray.h"
 
 class Sphere {
 public:
 	Sphere();
 	Sphere(float x, float y, float z, float radius);
-	bool intersectsRay(Vec3 origin, Vec3 direction);
+	float intersectsRay(Ray ray);
 	Material mat;
 	float radius;
 	Vec3 pos;

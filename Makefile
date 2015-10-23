@@ -1,5 +1,5 @@
 CC = g++ -Wall -lm
-OBJS = main.o vec3.o material.o sphere.o triangle.o stb_image_write.o
+OBJS = main.o vec3.o ray.o material.o sphere.o triangle.o stb_image_write.o
 .SUFFIXES: .c .o .h   # Define our suffix list
 
 %.o: %.cpp

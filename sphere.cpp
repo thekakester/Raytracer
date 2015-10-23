@@ -2,6 +2,8 @@
 #define SPHERE_CPP
 
 #include "sphere.h"
+#include "math.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 Sphere::Sphere() : pos(0,0,0) {
@@ -14,8 +16,10 @@ Sphere::Sphere(float x, float y, float z, float radius) : pos(x,y,z) {
 
 /**Checks if this sphere intersects with a ray
 NOTE: direction MUST be a unit vector!
+This returns the "d" value at which the ray intersects.
+If d is negative, there is no intersection
 **/
-bool Sphere::intersectsRay(Vec3 origin, Vec3 direction) {
+float Sphere::intersectsRay(Ray ray) {
 	//See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
 	//for line-sphere intersection formula!
 
@@ -25,12 +29,21 @@ bool Sphere::intersectsRay(Vec3 origin, Vec3 direction) {
 	//o = "origin"
 	//c = "Sphere::pos"
 	//r = "Sphere::radius"
-	Vec3 oMinusC = origin.subtract(Sphere::pos);
-	float part1 = direction.dot(oMinusC);
+	Vec3 oMinusC = ray.origin.subtract(Sphere::pos);
+	float part1 = ray.direction.dot(oMinusC);
 	float part2 = oMinusC.magnitude();
 	float under = (part1*part1) - (part2*part2) + (Sphere::radius*Sphere::radius);
 
-	return under >= 0;
+	//If under is less than 0, the value under the square root is imaginary
+	//aka, there is no collision
+	if (under < 0) { return -1; }	//No collision
+
+	//If there is, we have the equation:
+	//d = -(l . (o-c)) (+/-) sqrt( under)
+	//In this case, we just need the closest one, so return the minus part of under
+	//Note, l . (o-c) is part 1
+
+	return (-part1) - sqrt(under);
 }
 
 #endif

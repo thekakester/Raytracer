@@ -10,13 +10,6 @@ Vec3::Vec3(float x, float y, float z){
 	Vec3::z = z;
 }
 
-/**Create a vec3 (unit vector) as a ray from this point to
-"other" and return a new vec3 object
-NOTE: THIS IS OPPOSITE OF SUBTRACT()**/
-Vec3 Vec3::rayTo(Vec3 other) {
-	return Vec3(other.x - Vec3::x, other.y - Vec3::y, other.z - Vec3::z);
-}
-
 /**Create and return a normalized vector!**/
 Vec3 Vec3::normalize() {
 	float magnitude = Vec3::magnitude();
@@ -40,6 +33,12 @@ float Vec3::magnitude() {
 **/
 float Vec3::dot(Vec3 other) {
 	return (Vec3::x*other.x) + (Vec3::y*other.y) + (Vec3::z*other.z);
+}
+
+/**Multiply this vec3 by a scalar and RETURN A NEW VEC3
+**/
+Vec3 Vec3::multiplyByScalar(float scalar) {
+	return Vec3(Vec3::x*scalar,Vec3::y*scalar,Vec3::z*scalar);
 }
 
 #endif
