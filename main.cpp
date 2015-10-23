@@ -214,9 +214,19 @@ Vec3 shootRay(Ray ray, int iteration) {
 			}
 
 			if (seesLight) {
-				return sphere.mat.color;
+				//Calculate the normal of the sphere
+				Vec3 normal = intersectionPoint.subtract(sphere.pos).normalize();
+	
+				//Dot the lightray with normal
+				float correlation = normal.dot(rayToLight.direction);
+				if (correlation < 0) { correlation = 0; }
+
+				//Special case for calculating light
+				if (i == 0) { correlation = 1; }				
+
+				return sphere.mat.color.multiplyByScalar(correlation);
 			} else {
-				return sphere.mat.color.multiplyByScalar(0.2f);
+				return sphere.mat.color.multiplyByScalar(0.0f);
 			}
 		}
 	}
