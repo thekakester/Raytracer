@@ -9,8 +9,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 1400
-#define HEIGHT 900
+#define WIDTH 600
+#define HEIGHT 600
 #define FILENAME "output.png"
 
 
@@ -146,6 +146,7 @@ void traceRays() {
 			//This means that we shoot a ray from camera position to the plane
 			float xCoord = (((float)col / WIDTH ) * 2) - 1;	//Between -1 and 1
 			float yCoord = (((float)row / HEIGHT) * 2) - 1;	//Between -1 and 1
+			yCoord *= -1;	//Make sure to flip to handle rows
 			float zCoord = -2.0f;
 			
 			//Create a point out of this data
@@ -193,6 +194,16 @@ Vec3 shootRay(Ray ray, int iteration) {
 			//Return the color of the sphere dotted with the normal
 			Vec3 intersectionPoint = ray.pointAtDistance(d);
 
+			//Calculate the normal of the sphere
+			Vec3 normal = intersectionPoint.subtract(sphere.pos).normalize();
+
+			//If we intersected with a reflective surface, bounce it!
+			if (sphere.mat.reflective == 1) {
+				//TODO finish
+				//Calculate a reflected ray (add orig and normal, then take half vector
+				//Vec3 reflectedDirection = Vec3((normal.x + ray.origin.x)/2
+			}
+
 			//printf("Intersect at point <%.2f,%.2f,%.2f>\n",intersectionPoint.x, intersectionPoint.y, intersectionPoint.z);
 		
 			//Check if we can see the light
@@ -214,9 +225,6 @@ Vec3 shootRay(Ray ray, int iteration) {
 			}
 
 			if (seesLight) {
-				//Calculate the normal of the sphere
-				Vec3 normal = intersectionPoint.subtract(sphere.pos).normalize();
-	
 				//Dot the lightray with normal
 				float correlation = normal.dot(rayToLight.direction);
 				if (correlation < 0) { correlation = 0; }
@@ -224,9 +232,12 @@ Vec3 shootRay(Ray ray, int iteration) {
 				//Special case for calculating light
 				if (i == 0) { correlation = 1; }				
 
+				//Correlation is going to be worth 80%, 20% ambient
+				correlation = (correlation * 0.8f) + 0.2f;			
+
 				return sphere.mat.color.multiplyByScalar(correlation);
 			} else {
-				return sphere.mat.color.multiplyByScalar(0.0f);
+				return sphere.mat.color.multiplyByScalar(0.2f);
 			}
 		}
 	}
