@@ -1,5 +1,9 @@
 CC = g++ -Wall
-OBJS = main.o vec3.o material.o sphere.o triangle.o
+OBJS = main.o vec3.o material.o sphere.o triangle.o stb_image_write.o
+.SUFFIXES: .c .o .h   # Define our suffix list
+
+%.o: %.cpp
+	$(CC) -c -o $@ $<
 
 build: $(OBJS)
 	$(CC) -o raytracer $(OBJS)
@@ -7,8 +11,6 @@ build: $(OBJS)
 run: raytracer
 	./raytracer
 
-.c.o: vec3.cpp
-	$(CC) -c vec3.cpp
 clean:
-	rm *.o -f
-	rm raytracer
+	rm *.o -f -v
+	rm raytracer -v -f

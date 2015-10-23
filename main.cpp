@@ -2,17 +2,37 @@
 #include "triangle.h"
 #include "sphere.h"
 #include "vec3.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#define WIDTH 600
+#define HEIGHT 400
+#define FILENAME "output.png"
 
 
 using namespace std;
 
+//PROTOTYPES START
+void traceRays();
 void setupWorld();
+//PROTOTYPES END!
+
+Vec3 cameraPosition = Vec3(0,0,0);
+char image[WIDTH*HEIGHT*3];
 
 int main() {
-	cout << "Raytracer started!\n";
+	cout << "Raytracer starting!\n";
 	
 	setupWorld();	//Execute Dr. Kuhl's code from the assignment
+	cout << "World created!\n";
+	cout << "Tracing rays... ";
 
+	traceRays();
+
+	cout << "Done!\n";
+	cout << "Saving image... ";
+	stbi_write_png(FILENAME, WIDTH, HEIGHT, 3, image, WIDTH*3);
+	cout << "Done!\nRaytracing complete!\n";
 }
 
 /*********************************************
@@ -68,4 +88,18 @@ void setupWorld() {
 	// right red Triangle
 	Triangle right = Triangle(Vec3(8,-2,-20), Vec3(8,-2,-10), Vec3(8,10,-20));
 	right.mat = red;
+}
+
+/****************************************************************
+This actually runs the ray-tracing and saves the data to image[]
+****************************************************************/
+void traceRays() {
+	for (int row = 0; row < HEIGHT; row++) {
+		for (int col = 0; col < WIDTH; col++) {
+			int baseIndex = (row * WIDTH + col) * 3;
+			image[baseIndex+0] = 255;
+			image[baseIndex+1] = 100;
+			image[baseIndex+2] = 0;
+		}
+	}
 }
