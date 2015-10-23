@@ -1,8 +1,8 @@
-CC = g++ -c -Wall
-OBJS = main.o vec3.o
+CC = g++ -Wall
+OBJS = main.o vec3.o material.o sphere.o triangle.o
 
 build: $(OBJS)
-	g++ -o raytracer $(OBJS)
+	$(CC) -o raytracer $(OBJS)
 
 run: raytracer
 	./raytracer
