@@ -7,6 +7,7 @@ Triangle::Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : v1(p1), v2(p2), v3(p3) {
 }
 
 float Triangle::intersectsRay(Ray ray) {
+	
 	return 0;
 }
 

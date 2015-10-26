@@ -16,6 +16,6 @@ run: raytracer
 	./raytracer
 
 clean:
-	rm *.o -f -v
-	rm raytracer -v -f
-	rm output.png -v -f
+	rm -v -f *.o
+	rm -v -f raytracer
+	rm -v -f output.png
