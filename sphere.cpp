@@ -1,6 +1,6 @@
 #ifndef SPHERE_CPP
 #define SPHERE_CPP
-
+#include <iostream>
 #include "sphere.h"
 #include "math.h"
 #include <stdio.h>
@@ -20,6 +20,7 @@ This returns the "d" value at which the ray intersects.
 If d is negative, there is no intersection
 **/
 float Sphere::intersectsRay(Ray ray) {
+    
 	//See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
 	//for line-sphere intersection formula!
 
@@ -44,6 +45,10 @@ float Sphere::intersectsRay(Ray ray) {
 	//Note, l . (o-c) is part 1
 
 	return (-part1) - sqrt(under);
+}
+
+Vec3 Sphere::getNormal(Vec3 intersect){
+    return intersect.subtract(pos).normalize();
 }
 
 #endif

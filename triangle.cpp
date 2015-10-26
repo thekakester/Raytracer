@@ -3,7 +3,14 @@
 
 #include "triangle.h"
 
-Triangle::Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : vertex1(p1), vertex2(p2), vertex3(p3) {
+Triangle::Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : v1(p1), v2(p2), v3(p3) {
 }
 
+float Triangle::intersectsRay(Ray ray) {
+	return 0;
+}
+
+Vec3 Triangle::getNormal(Vec3 intersect){
+    return Vec3(0,0,0);
+}
 #endif

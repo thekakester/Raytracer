@@ -1,12 +1,16 @@
-CC = g++ -Wall -lm
-OBJS = main.o vec3.o ray.o material.o sphere.o triangle.o stb_image_write.o
+CC = g++
+FLAGS = -Wall -std=c++11 -lm
+OBJS = vec3.o ray.o material.o sphere.o triangle.o stb_image_write.o main.o
 .SUFFIXES: .c .o .h   # Define our suffix list
 
-%.o: %.cpp
-	$(CC) -c -o $@ $<
+%.o: %.cpp %.h intersectable.h
+	$(CC) $(FLAGS) -c -o $@ $<
 
 build: $(OBJS)
-	$(CC) -o raytracer $(OBJS)
+	$(CC) $(FLAGS) -o raytracer $(OBJS)
+
+main.o: main.cpp
+	g++ -Wall -std=c++11 -lm -c -o main.o main.cpp
 
 run: raytracer
 	./raytracer

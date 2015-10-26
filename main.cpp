@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "triangle.h"
+#include "intersectable.h"
 #include "sphere.h"
 #include "vec3.h"
 #include "ray.h"
@@ -10,9 +11,8 @@
 #include "stb_image_write.h"
 
 #define WIDTH 600
-#define HEIGHT 600
+#define HEIGHT 400
 #define FILENAME "output.png"
-
 
 using namespace std;
 
@@ -26,8 +26,7 @@ Vec3 cameraPosition = Vec3(0,0,0);
 Vec3 light = Vec3(3,5,-15);
 char image[WIDTH*HEIGHT*3];
 
-vector<Sphere> spheres;
-vector<Triangle> triangles;
+vector<Intersectable*> objects;
 
 int main() {
 	cout << "Raytracer starting!\n";
@@ -76,55 +75,55 @@ void setupWorld() {
 	yellow.color = Vec3(1,1,0);
 
 	// create three Spheres
-	Sphere sph1;
-	sph1.pos = Vec3(0,0,-16);
-	sph1.radius = 2;
-	sph1.mat = refl;
-	Sphere sph2;
-	sph2.pos = Vec3(3,-1,-14);
-	sph2.radius = 1;
-	sph2.mat = refl;
-	Sphere sph3;
-	sph3.pos = Vec3(-3,-1,-14);
-	sph3.radius = 1;
-	sph3.mat = red;
+	Sphere* sph1 = new Sphere();
+	sph1->pos = Vec3(0,0,-16);
+	sph1->radius = 2;
+	sph1->mat = refl;
+	Sphere* sph2 = new Sphere();
+	sph2->pos = Vec3(3,-1,-14);
+	sph2->radius = 1;
+	sph2->mat = refl;
+	Sphere* sph3 = new Sphere();
+	sph3->pos = Vec3(-3,-1,-14);
+	sph3->radius = 1;
+	sph3->mat = red;
 
 
 	//Add a sphere at the light
-	Sphere lightSphere;
-	lightSphere.pos = light;
-	lightSphere.mat = yellow;
-	lightSphere.radius = 0.05f;
+	Sphere* lightSphere = new Sphere();
+	lightSphere->pos = light;
+	lightSphere->mat = yellow;
+	lightSphere->radius = 0.05f;
 
 	//Add the spheres to our vector
 	//NOTE!  (Sphere at position 0 in vector does not have light act on it!)
-	spheres.push_back(lightSphere);
-	spheres.push_back(sph1);
-	spheres.push_back(sph2);
-	spheres.push_back(sph3);
+	objects.push_back(lightSphere);
+	objects.push_back(sph1);
+	objects.push_back(sph2);
+	objects.push_back(sph3);
 	
 	// back wall
-	Triangle back1 = Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
-	back1.mat = blue;
-	Triangle back2 = Triangle(Vec3(-8,-2,-20), Vec3(8,10,-20), Vec3(-8,10,-20));
-	back2.mat = blue;
+	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
+	back1->mat = blue;
+	Triangle* back2 = new Triangle(Vec3(-8,-2,-20), Vec3(8,10,-20), Vec3(-8,10,-20));
+	back2->mat = blue;
 
 	// floor
-	Triangle bot1 = Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-10), Vec3(8,-2,-20));
-	bot1.mat = white;
-	Triangle bot2 = Triangle(Vec3(-8,-2,-20), Vec3(-8,-2,-10), Vec3(8,-2,-10));
-	bot2.mat = white;
+	Triangle* bot1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-10), Vec3(8,-2,-20));
+	bot1->mat = white;
+	Triangle* bot2 = new Triangle(Vec3(-8,-2,-20), Vec3(-8,-2,-10), Vec3(8,-2,-10));
+	bot2->mat = white;
 
 	// right red Triangle
-	Triangle right = Triangle(Vec3(8,-2,-20), Vec3(8,-2,-10), Vec3(8,10,-20));
-	right.mat = red;
+	Triangle* right = new Triangle(Vec3(8,-2,-20), Vec3(8,-2,-10), Vec3(8,10,-20));
+	right->mat = red;
 
 	//Add the triangles to our vector
-	triangles.push_back(back1);
-	triangles.push_back(back2);
-	triangles.push_back(bot1);
-	triangles.push_back(bot2);
-	triangles.push_back(right);
+	//objects.push_back(back1);
+	//objects.push_back(back2);
+	//objects.push_back(bot1);
+	//objects.push_back(bot2);
+	//objects.push_back(right);
 }
 
 /****************************************************************
@@ -184,21 +183,22 @@ Vec3 shootRay(Ray ray, int iteration) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
-	//Loop over every sphere and check for collision!
-	for (unsigned int i = 0; i < spheres.size(); i++) {
-		Sphere sphere = spheres.at(i);
+	//Loop over every object and check for collision!
+	for (unsigned int i = 0; i < objects.size(); i++) {
+		Intersectable* object = objects.at(i);
+		
 		//printf("Ray/Sphere collision: Ray <%.2f,%.2f,%.2f><%.2f,%.2f,%.2f> Sphere[<%.2f,%.2f,%.2f> r:%.2f]\n",ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, sphere.pos.x, sphere.pos.y, sphere.pos.z, sphere.radius);
 
-		float d = sphere.intersectsRay(ray);
+		float d = object->intersectsRay(ray);
 		if (d >= 0) {
 			//Return the color of the sphere dotted with the normal
 			Vec3 intersectionPoint = ray.pointAtDistance(d);
 
 			//Calculate the normal of the sphere
-			Vec3 normal = intersectionPoint.subtract(sphere.pos).normalize();
+			Vec3 normal = object->getNormal(intersectionPoint);
 
 			//If we intersected with a reflective surface, bounce it!
-			if (sphere.mat.reflective == 1) {
+			if (object->mat.reflective == 1) {
 				//TODO finish
 				//Calculate a reflected ray (add orig and normal, then take half vector
 				//Vec3 reflectedDirection = Vec3((normal.x + ray.origin.x)/2
@@ -213,11 +213,11 @@ Vec3 shootRay(Ray ray, int iteration) {
 			bool seesLight = true;	//Set to false if intersects
 
 			//Check if we hit anything
-			for (unsigned int j = 1; j < spheres.size(); j++) {
+			for (unsigned int j = 1; j < objects.size(); j++) {
 				if (i==j) { continue; }
 				
 				//If we intersect
-				float dist = spheres.at(j).intersectsRay(rayToLight);
+				float dist = objects.at(j)->intersectsRay(rayToLight);
 				if (dist >= 0) {
 					seesLight = false; //We failed!
 					break;
@@ -235,9 +235,9 @@ Vec3 shootRay(Ray ray, int iteration) {
 				//Correlation is going to be worth 80%, 20% ambient
 				correlation = (correlation * 0.8f) + 0.2f;			
 
-				return sphere.mat.color.multiplyByScalar(correlation);
+				return object->mat.color.multiplyByScalar(correlation);
 			} else {
-				return sphere.mat.color.multiplyByScalar(0.2f);
+				return object->mat.color.multiplyByScalar(0.2f);
 			}
 		}
 	}
