@@ -10,6 +10,7 @@ public:
 	Vec3 multiplyByScalar(float);
 	Vec3 normalize();
 	float dot(Vec3);
+	Vec3 cross(Vec3);
 };
 
 #endif

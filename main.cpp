@@ -33,10 +33,12 @@ int main() {
 	
 	setupWorld();	//Execute Dr. Kuhl's code from the assignment
 	cout << "World created!\n";
-	cout << "Tracing rays... ";
+	cout << "Tracing rays...\n";
 
 	traceRays();
 
+    printf("\e[1ATracing rays... %d%%\n", 100);
+    
 	cout << "Done!\n";
 	cout << "Saving image... ";
 	stbi_write_png(FILENAME, WIDTH, HEIGHT, 3, image, WIDTH*3);
@@ -97,10 +99,10 @@ void setupWorld() {
 
 	//Add the spheres to our vector
 	//NOTE!  (Sphere at position 0 in vector does not have light act on it!)
-	objects.push_back(lightSphere);
-	objects.push_back(sph1);
-	objects.push_back(sph2);
-	objects.push_back(sph3);
+	//objects.push_back(lightSphere);
+	//objects.push_back(sph1);
+	//objects.push_back(sph2);
+	//objects.push_back(sph3);
 	
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
@@ -121,7 +123,7 @@ void setupWorld() {
 	//Add the triangles to our vector
 	//objects.push_back(back1);
 	//objects.push_back(back2);
-	//objects.push_back(bot1);
+	objects.push_back(bot1);
 	//objects.push_back(bot2);
 	//objects.push_back(right);
 }
@@ -133,7 +135,7 @@ void traceRays() {
 	for (int row = 0; row < HEIGHT; row++) {
 		//For progress, print off percentage every few rows
 		if (row % 20 == 0) {
-			cout << (row*100.0f)/HEIGHT << "%\n";
+		    printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
 		}
 
 		for (int col = 0; col < WIDTH; col++) {

@@ -35,6 +35,14 @@ float Vec3::dot(Vec3 other) {
 	return (Vec3::x*other.x) + (Vec3::y*other.y) + (Vec3::z*other.z);
 }
 
+/**Cross two vec3s together
+**/
+Vec3 Vec3::cross(Vec3 other) {
+	return Vec3(Vec3::y * other.z - Vec3::z * other.y, 
+	            Vec3::z * other.y - Vec3::x * other.z,
+	            Vec3::x * other.y - Vec3::y * other.x);
+}
+
 /**Multiply this vec3 by a scalar and RETURN A NEW VEC3
 **/
 Vec3 Vec3::multiplyByScalar(float scalar) {

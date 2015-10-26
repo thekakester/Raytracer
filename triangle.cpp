@@ -11,6 +11,9 @@ float Triangle::intersectsRay(Ray ray) {
 }
 
 Vec3 Triangle::getNormal(Vec3 intersect){
-    return Vec3(0,0,0);
+    //TODO use the intersect vector some how
+    Vec3 edgeA = v1.subtract(v2);
+    Vec3 edgeB = v3.subtract(v2);
+    return edgeA.cross(edgeB).normalize();
 }
 #endif
