@@ -16,10 +16,16 @@ Vec3 Vec3::normalize() {
 	return Vec3(Vec3::x/magnitude, Vec3::y/magnitude, Vec3::z/magnitude);
 }
 
+/**Add "other" with this
+*/
+Vec3 Vec3::add(Vec3 other) {
+	return Vec3(Vec3::x+other.x, Vec3::y+other.y, Vec3::z+other.z);
+}
+
 /**Subtract "other" from this
 aka "return this-other"
 NOTE: THIS IS OPPOSITE OF RAYTO()**/
-Vec3 Vec3::subtract(Vec3 other) {
+Vec3 Vec3::minus(Vec3 other) {
 	return Vec3(Vec3::x-other.x, Vec3::y-other.y, Vec3::z-other.z);
 }
 

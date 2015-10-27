@@ -15,8 +15,8 @@ float Triangle::intersectsRay(Ray ray) {
 	//as a reference for this function
 
 	//Calculate the normal
-	Vec3 edgeA = v2.subtract(v1);
-	Vec3 edgeB = v3.subtract(v1);
+	Vec3 edgeA = v2.minus(v1);
+	Vec3 edgeB = v3.minus(v1);
 	Vec3 normal = edgeA.cross(edgeB).normalize();
 
 	/*printf("v1 x: %.2f y: %.2f z: %.2f\n", v1.x, v1.y, v1.z);
@@ -46,18 +46,18 @@ float Triangle::intersectsRay(Ray ray) {
 	Vec3 p(projPt.x + ray.origin.x, projPt.y + ray.origin.y, projPt.z + ray.origin.z);
 
 	//Make sure that p is in the triangle, not just the plane of the triangle
-	Vec3 a = v2.subtract(v1);
-	Vec3 b = p.subtract(v1);
+	Vec3 a = v2.minus(v1);
+	Vec3 b = p.minus(v1);
 	Vec3 c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	a = v3.subtract(v2);
-	b = p.subtract(v2);
+	a = v3.minus(v2);
+	b = p.minus(v2);
 	c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	a = v1.subtract(v3);
-	b = p.subtract(v3);
+	a = v1.minus(v3);
+	b = p.minus(v3);
 	c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
@@ -65,9 +65,9 @@ float Triangle::intersectsRay(Ray ray) {
 }
 
 Vec3 Triangle::getNormal(Vec3 intersect){
-	//Calculate the normal
-	Vec3 edgeA = v2.subtract(v1);
-	Vec3 edgeB = v3.subtract(v1);
-	return edgeA.cross(edgeB);
+    //TODO use the intersect vector some how
+    Vec3 edgeA = v1.minus(v2);
+    Vec3 edgeB = v3.minus(v2);
+    return edgeA.cross(edgeB).normalize();
 }
 #endif
