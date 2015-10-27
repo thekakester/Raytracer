@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include "triangle.h"
 #include "intersectable.h"
 #include "sphere.h"
 #include "vec3.h"
 #include "ray.h"
-#include "math.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
