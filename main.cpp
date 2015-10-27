@@ -53,8 +53,6 @@ to make it compatable with our classes
 **********************************************/
 void setupWorld() {
 
-	
-
 	// make a Material which is reflective
 	Material refl;
 	refl.reflective = 0.5f;

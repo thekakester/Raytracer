@@ -6,25 +6,15 @@
 
 #define EPSILON 0.000001
 
-Triangle::Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : v1(p1), v2(p2), v3(p3) {
-}
+Triangle::Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : v1(p1), v2(p2), v3(p3){}
 
 float Triangle::intersectsRay(Ray ray) {
 	//We used:
 	//http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
 	//as a reference for this function
 
-	//Calculate the normal
-	Vec3 edgeA = v2.minus(v1);
-	Vec3 edgeB = v3.minus(v1);
-	Vec3 normal = edgeA.cross(edgeB).normalize();
-
-	/*printf("v1 x: %.2f y: %.2f z: %.2f\n", v1.x, v1.y, v1.z);
-	printf("v2 x: %.2f y: %.2f z: %.2f\n", v2.x, v2.y, v2.z);
-	printf("v3 x: %.2f y: %.2f z: %.2f\n", v3.x, v3.y, v3.z);
-	printf("eA x: %.2f y: %.2f z: %.2f\n", edgeA.x, edgeA.y, edgeA.z);
-	printf("eB x: %.2f y: %.2f z: %.2f\n", edgeB.x, edgeB.y, edgeB.z);
-	printf("No x: %.2f y: %.2f z: %.2f\n", normal.x, normal.y, normal.z);*/
+	//calculate the normal
+	Vec3 normal = v2.minus(v1).cross(v3.minus(v1)).normalize();
 
 	//Check for the parallel case
 	//Note that we use < EPSILON instead of == 0
@@ -46,19 +36,13 @@ float Triangle::intersectsRay(Ray ray) {
 	Vec3 p(projPt.x + ray.origin.x, projPt.y + ray.origin.y, projPt.z + ray.origin.z);
 
 	//Make sure that p is in the triangle, not just the plane of the triangle
-	Vec3 a = v2.minus(v1);
-	Vec3 b = p.minus(v1);
-	Vec3 c = a.cross(b).normalize();
+	Vec3 c = v2.minus(v1).cross(p.minus(v1)).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	a = v3.minus(v2);
-	b = p.minus(v2);
-	c = a.cross(b).normalize();
+	c = v3.minus(v2).cross(p.minus(v2)).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	a = v1.minus(v3);
-	b = p.minus(v3);
-	c = a.cross(b).normalize();
+	c = v1.minus(v3).cross(p.minus(v3)).normalize();
 	if(normal.dot(c) < 0) return -1;
 
 	return depth;
@@ -66,8 +50,6 @@ float Triangle::intersectsRay(Ray ray) {
 
 Vec3 Triangle::getNormal(Vec3 intersect){
     //TODO use the intersect vector some how
-    Vec3 edgeA = v1.minus(v2);
-    Vec3 edgeB = v3.minus(v2);
-    return edgeA.cross(edgeB).normalize();
+    return v2.minus(v1).cross(v3.minus(v1)).normalize();
 }
 #endif
