@@ -10,8 +10,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 600
-#define HEIGHT 400
+#define WIDTH 512
+#define HEIGHT 512
 #define FILENAME "output.png"
 
 using namespace std;
@@ -99,10 +99,10 @@ void setupWorld() {
 
 	//Add the spheres to our vector
 	//NOTE!  (Sphere at position 0 in vector does not have light act on it!)
-	//objects.push_back(lightSphere);
-	//objects.push_back(sph1);
-	//objects.push_back(sph2);
-	//objects.push_back(sph3);
+	objects.push_back(lightSphere);
+	objects.push_back(sph1);
+	objects.push_back(sph2);
+	objects.push_back(sph3);
 	
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
@@ -121,11 +121,11 @@ void setupWorld() {
 	right->mat = red;
 
 	//Add the triangles to our vector
-	//objects.push_back(back1);
-	//objects.push_back(back2);
+	objects.push_back(back1);
+	objects.push_back(back2);
 	objects.push_back(bot1);
-	//objects.push_back(bot2);
-	//objects.push_back(right);
+	objects.push_back(bot2);
+	objects.push_back(right);
 }
 
 /****************************************************************
