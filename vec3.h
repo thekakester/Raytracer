@@ -5,7 +5,8 @@ class Vec3 {
 public:
 	Vec3(float x,float y, float z);
 	float x,y,z;
-	Vec3 subtract(Vec3);
+	Vec3 minus(Vec3);
+	Vec3 add(Vec3);
 	float magnitude();
 	Vec3 multiplyByScalar(float);
 	Vec3 normalize();

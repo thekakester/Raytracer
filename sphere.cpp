@@ -30,7 +30,7 @@ float Sphere::intersectsRay(Ray ray) {
 	//o = "origin"
 	//c = "Sphere::pos"
 	//r = "Sphere::radius"
-	Vec3 oMinusC = ray.origin.subtract(Sphere::pos);
+	Vec3 oMinusC = ray.origin.minus(Sphere::pos);
 	float part1 = ray.direction.dot(oMinusC);
 	float part2 = oMinusC.magnitude();
 	float under = (part1*part1) - (part2*part2) + (Sphere::radius*Sphere::radius);
@@ -43,12 +43,11 @@ float Sphere::intersectsRay(Ray ray) {
 	//d = -(l . (o-c)) (+/-) sqrt( under)
 	//In this case, we just need the closest one, so return the minus part of under
 	//Note, l . (o-c) is part 1
-
 	return (-part1) - sqrt(under);
 }
 
 Vec3 Sphere::getNormal(Vec3 intersect){
-    return intersect.subtract(pos).normalize();
+    return intersect.minus(pos).normalize();
 }
 
 #endif

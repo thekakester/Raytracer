@@ -9,6 +9,7 @@ public:
 	Vec3 origin;
 	Vec3 direction;
 	Vec3 pointAtDistance(float);
+	Ray reflect(Vec3,Vec3);
 };
 
 

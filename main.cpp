@@ -11,7 +11,7 @@
 #include "stb_image_write.h"
 
 #define WIDTH 600
-#define HEIGHT 400
+#define HEIGHT 600
 #define FILENAME "output.png"
 
 using namespace std;
@@ -57,7 +57,7 @@ void setupWorld() {
 
 	// make a Material which is reflective
 	Material refl;
-	refl.reflective = 1;
+	refl.reflective = 0.5f;
 	refl.color = Vec3(0,0,1); // color is not used when Material is reflective!
 
 	// make several diffuse Materials to choose from
@@ -99,10 +99,10 @@ void setupWorld() {
 
 	//Add the spheres to our vector
 	//NOTE!  (Sphere at position 0 in vector does not have light act on it!)
-	//objects.push_back(lightSphere);
-	//objects.push_back(sph1);
-	//objects.push_back(sph2);
-	//objects.push_back(sph3);
+	objects.push_back(lightSphere);
+	objects.push_back(sph1);
+	objects.push_back(sph2);
+	objects.push_back(sph3);
 	
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
@@ -124,7 +124,7 @@ void setupWorld() {
 	//objects.push_back(back1);
 	//objects.push_back(back2);
 	objects.push_back(bot1);
-	//objects.push_back(bot2);
+	objects.push_back(bot2);
 	//objects.push_back(right);
 }
 
@@ -181,7 +181,7 @@ Only do up to 1000 recurses before deciding to return black!
 Vec3 shootRay(Ray ray, int iteration) {
 
 	//If we recursed too many times
-	if (iteration > 0) {
+	if (iteration > 10) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
@@ -200,11 +200,19 @@ Vec3 shootRay(Ray ray, int iteration) {
 			Vec3 normal = object->getNormal(intersectionPoint);
 
 			//If we intersected with a reflective surface, bounce it!
-			if (object->mat.reflective == 1) {
-				//TODO finish
-				//Calculate a reflected ray (add orig and normal, then take half vector
-				//Vec3 reflectedDirection = Vec3((normal.x + ray.origin.x)/2
+			//TODO: Go above and beyond!  Let reflective be a percentage!
+			Vec3 reflectiveColor = Vec3(0,0,0);
+			
+			//Only calculate if we are somewhat reflective
+			if (object->mat.reflective > 0) {
+				reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1);
 			}
+			
+			//Let "p" be the percentage of this reflection
+			//Let "q" be 1-p
+			//This will be "p" % whatever this color is
+			//and q % regular diffuse!
+			reflectiveColor.multiplyByScalar(object->mat.reflective);
 
 			//printf("Intersect at point <%.2f,%.2f,%.2f>\n",intersectionPoint.x, intersectionPoint.y, intersectionPoint.z);
 		
@@ -226,24 +234,36 @@ Vec3 shootRay(Ray ray, int iteration) {
 				}
 			}
 
+			//Its time to calculate the color to return
+
+			//Ambient light!
+			Vec3 ambience = object->mat.color.multiplyByScalar(0.2f);
+			Vec3 diffuse = Vec3(0,0,0);
+
 			if (seesLight) {
 				//Dot the lightray with normal
 				float correlation = normal.dot(rayToLight.direction);
 				if (correlation < 0) { correlation = 0; }
 
 				//Special case for calculating light
+				//Ignire diffuse for the light in our scene
 				if (i == 0) { correlation = 1; }				
-
-				//Correlation is going to be worth 80%, 20% ambient
-				correlation = (correlation * 0.8f) + 0.2f;			
-
-				return object->mat.color.multiplyByScalar(correlation);
-			} else {
-				return object->mat.color.multiplyByScalar(0.2f);
+	
+				//Diffuse is 80%!
+				diffuse = object->mat.color.multiplyByScalar(correlation * 0.8);
 			}
+			
+			//The return color is:
+			// Reflection + (diffuse + ambient)
+			Vec3 returnColor = diffuse.add(ambience);
+			
+			//How much of an impact does reflection have on this?
+			//(note, this does nothing if object is not reflective)
+			returnColor = returnColor.multiplyByScalar(1 - object->mat.reflective);
+			returnColor = returnColor.add(reflectiveColor);
+			return returnColor;
 		}
 	}
-	
 	//Recurse!
 	return shootRay(ray, iteration+1);
 }
