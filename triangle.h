@@ -8,7 +8,6 @@
 class Triangle : public Intersectable{
 public:
 	Triangle(Vec3 p1, Vec3 p2, Vec3 p3);
-
 	float intersectsRay(Ray ray) override;
 	Vec3 getNormal(Vec3 intersect) override;
 
@@ -17,5 +16,8 @@ public:
 	Vec3 v1;
 	Vec3 v2;
 	Vec3 v3;
+
+protected:
+	~Triangle(){}
 };
 #endif
