@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <map>
 #include "triangle.h"
 #include "intersectable.h"
 #include "sphere.h"
@@ -12,37 +13,45 @@
 
 #define WIDTH 600
 #define HEIGHT 600
-#define FILENAME "output.png"
 
 using namespace std;
 
 //PROTOTYPES START
 void traceRays();
-void setupWorld();
+void setupReferenceWorld();
+void setupCustomWorld();
 Vec3 shootRay(Ray, int);
 //PROTOTYPES END!
 
 Vec3 cameraPosition = Vec3(0,0,0);
 Vec3 light = Vec3(3,5,-15);
+
 char image[WIDTH*HEIGHT*3];
 
 vector<Intersectable*> objects;
 
-int main() {
+int main(int argc, char** argv) {
 	cout << "Raytracer starting!\n";
-	
-	setupWorld();	//Execute Dr. Kuhl's code from the assignment
+
+	string filename;
+	if(argc > 1 && strcmp(argv[1], "custom") == 0){
+		setupCustomWorld();	//Execute our cutom world
+		filename = "custom.png";
+	}else{
+		setupReferenceWorld();	//Execute Dr. Kuhl's code from the assignment
+		filename = "reference.png";
+	}
 	cout << "World created!\n";
 	cout << "Tracing rays...\n";
 
 	traceRays();
 
-    printf("\e[1ATracing rays... %d%%\n", 100);
-    
-	cout << "Done!\n";
-	cout << "Saving image... ";
-	stbi_write_png(FILENAME, WIDTH, HEIGHT, 3, image, WIDTH*3);
+	printf("\e[1ATracing rays... Done!\n");
+
+	cout << "Saving image to " << filename << "... ";
+	stbi_write_png(filename.c_str(), WIDTH, HEIGHT, 3, image, WIDTH*3);
 	cout << "Done!\nRaytracing complete!\n";
+
 }
 
 /*********************************************
@@ -50,8 +59,8 @@ The code posted on canvas.
 This will setup the world for the assignment
 Only minor adjustments were made in this code
 to make it compatable with our classes
-**********************************************/
-void setupWorld() {
+ **********************************************/
+void setupReferenceWorld() {
 
 	// make a Material which is reflective
 	Material refl;
@@ -68,7 +77,7 @@ void setupWorld() {
 	Material white;
 	white.reflective = 0;
 	white.color = Vec3(1,1,1);
-	
+
 	//Light yellow!
 	Material yellow;
 	yellow.reflective = 0;
@@ -101,7 +110,7 @@ void setupWorld() {
 	objects.push_back(sph1);
 	objects.push_back(sph2);
 	objects.push_back(sph3);
-	
+
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
 	back1->mat = blue;
@@ -126,20 +135,36 @@ void setupWorld() {
 	objects.push_back(right);
 }
 
+
+void setupCustomWorld() {
+	Material white;
+	white.reflective = 0;
+	white.color = Vec3(1,1,1);
+
+	// floor
+	Triangle* bot1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-10), Vec3(8,-2,-20));
+	bot1->mat = white;
+	Triangle* bot2 = new Triangle(Vec3(-8,-2,-20), Vec3(-8,-2,-10), Vec3(8,-2,-10));
+	bot2->mat = white;
+
+	objects.push_back(bot1);
+	objects.push_back(bot2);
+}
+
 /****************************************************************
 This actually runs the ray-tracing and saves the data to image[]
-****************************************************************/
+ ****************************************************************/
 void traceRays() {
 	for (int row = 0; row < HEIGHT; row++) {
 		//For progress, print off percentage every few rows
 		if (row % 20 == 0) {
-		    printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
+			printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
 		}
 
 		for (int col = 0; col < WIDTH; col++) {
 			//Decides where in image[] to set data!
 			int baseIndex = (row * WIDTH + col) * 3;
-			
+
 			//Image plane is at Z = -2, and has a width/height of 2/2
 			//This means x and y coordinates range from -1 to 1
 			//This means that we shoot a ray from camera position to the plane
@@ -147,10 +172,10 @@ void traceRays() {
 			float yCoord = (((float)row / HEIGHT) * 2) - 1;	//Between -1 and 1
 			yCoord *= -1;	//Make sure to flip to handle rows
 			float zCoord = -2.0f;
-			
+
 			//Create a point out of this data
 			Vec3 imagePixel = Vec3(xCoord,yCoord,zCoord);
-			
+
 			//Create a ray from the camera to the imagePixel
 			Ray ray = Ray(cameraPosition,imagePixel);
 
@@ -167,7 +192,7 @@ void traceRays() {
 			image[baseIndex+0] = color.x;
 			image[baseIndex+1] = color.y;
 			image[baseIndex+2] = color.z;
-			
+
 		}
 	}
 }
@@ -175,7 +200,7 @@ void traceRays() {
 /**Shoot a given ray at the scene and return
 a color.  This is recursive, so it could potentially go deeper!
 Only do up to 1000 recurses before deciding to return black!
-**/
+ **/
 Vec3 shootRay(Ray ray, int iteration) {
 
 	//If we recursed too many times
@@ -186,10 +211,11 @@ Vec3 shootRay(Ray ray, int iteration) {
 	//Loop over every object and check for collision!
 	for (unsigned int i = 0; i < objects.size(); i++) {
 		Intersectable* object = objects.at(i);
-		
+
 		//printf("Ray/Sphere collision: Ray <%.2f,%.2f,%.2f><%.2f,%.2f,%.2f> Sphere[<%.2f,%.2f,%.2f> r:%.2f]\n",ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, sphere.pos.x, sphere.pos.y, sphere.pos.z, sphere.radius);
 
 		float d = object->intersectsRay(ray);
+
 		if (d >= 0) {
 			//Return the color of the sphere dotted with the normal
 			Vec3 intersectionPoint = ray.pointAtDistance(d);
@@ -200,12 +226,12 @@ Vec3 shootRay(Ray ray, int iteration) {
 			//If we intersected with a reflective surface, bounce it!
 			//TODO: Go above and beyond!  Let reflective be a percentage!
 			Vec3 reflectiveColor = Vec3(0,0,0);
-			
+
 			//Only calculate if we are somewhat reflective
 			if (object->mat.reflective > 0) {
 				reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1);
 			}
-			
+
 			//Let "p" be the percentage of this reflection
 			//Let "q" be 1-p
 			//This will be "p" % whatever this color is
@@ -213,7 +239,7 @@ Vec3 shootRay(Ray ray, int iteration) {
 			reflectiveColor.multiplyByScalar(object->mat.reflective);
 
 			//printf("Intersect at point <%.2f,%.2f,%.2f>\n",intersectionPoint.x, intersectionPoint.y, intersectionPoint.z);
-		
+
 			//Check if we can see the light
 			//Create a ray from the point to the light
 			Ray rayToLight = Ray(intersectionPoint,light);
@@ -223,7 +249,7 @@ Vec3 shootRay(Ray ray, int iteration) {
 			//Check if we hit anything
 			for (unsigned int j = 1; j < objects.size(); j++) {
 				if (i==j) { continue; }
-				
+
 				//If we intersect
 				float dist = objects.at(j)->intersectsRay(rayToLight);
 				if (dist >= 0) {
@@ -246,15 +272,15 @@ Vec3 shootRay(Ray ray, int iteration) {
 				//Special case for calculating light
 				//Ignire diffuse for the light in our scene
 				if (i == 0) { correlation = 1; }				
-	
+
 				//Diffuse is 80%!
 				diffuse = object->mat.color.multiplyByScalar(correlation * 0.8);
 			}
-			
+
 			//The return color is:
 			// Reflection + (diffuse + ambient)
 			Vec3 returnColor = diffuse.add(ambience);
-			
+
 			//How much of an impact does reflection have on this?
 			//(note, this does nothing if object is not reflective)
 			returnColor = returnColor.multiplyByScalar(1 - object->mat.reflective);

@@ -33,16 +33,23 @@ float Triangle::intersectsRay(Ray ray) {
 
 	//Compute the intersection point
 	Vec3 projPt = ray.direction.multiplyByScalar(depth);
-	Vec3 p(projPt.x + ray.origin.x, projPt.y + ray.origin.y, projPt.z + ray.origin.z);
+	//Vec3 p(projPt.x + ray.origin.x, projPt.y + ray.origin.y, projPt.z + ray.origin.z);
+	Vec3 p(projPt.x, projPt.y, projPt.z);
 
 	//Make sure that p is in the triangle, not just the plane of the triangle
-	Vec3 c = v2.minus(v1).cross(p.minus(v1)).normalize();
+	Vec3 a = v2.minus(v1);
+	Vec3 b = p.minus(v1);
+	Vec3 c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	c = v3.minus(v2).cross(p.minus(v2)).normalize();
+	a = v3.minus(v2);
+	b = p.minus(v2);
+	c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
-	c = v1.minus(v3).cross(p.minus(v3)).normalize();
+	a = v1.minus(v3);
+	b = p.minus(v3);
+	c = a.cross(b).normalize();
 	if(normal.dot(c) < 0) return -1;
 
 	return depth;
