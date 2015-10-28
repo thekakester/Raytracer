@@ -10,16 +10,24 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 600
-#define HEIGHT 600
+#define WIDTH 1500
+#define HEIGHT 1500
 #define FILENAME "output.png"
+
+//Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
+//ray tracer for a specific pixel of the output image.  This is good
+//For tracking where a ray bounces!
+//Set to -1 to ignore!
+//NOTE: This creates no output image!
+#define SINGLEX = -1
+#define SINGLEY = -1;
 
 using namespace std;
 
 //PROTOTYPES START
 void traceRays();
 void setupWorld();
-Vec3 shootRay(Ray, int);
+Vec3 shootRay(Ray, int, int);
 //PROTOTYPES END!
 
 Vec3 cameraPosition = Vec3(0,0,0);
@@ -55,18 +63,18 @@ void setupWorld() {
 
 	// make a Material which is reflective
 	Material refl;
-	refl.reflective = 0.5f;
+	refl.reflective = 1.0f;
 	refl.color = Vec3(0,0,1); // color is not used when Material is reflective!
 
 	// make several diffuse Materials to choose from
 	Material red;
-	red.reflective = 0;
+	red.reflective = 0.0f;
 	red.color = Vec3(1,0,0);
 	Material blue;
-	blue.reflective = 0;
+	blue.reflective = 0.0f;
 	blue.color = Vec3(0,0,1);
 	Material white;
-	white.reflective = 0;
+	white.reflective = 0.0f;
 	white.color = Vec3(1,1,1);
 	
 	//Light yellow!
@@ -76,7 +84,7 @@ void setupWorld() {
 
 	// create three Spheres
 	Sphere* sph1 = new Sphere();
-	sph1->pos = Vec3(0,0,-16);
+	sph1->pos = Vec3(0,1,-16);
 	sph1->radius = 2;
 	sph1->mat = refl;
 	Sphere* sph2 = new Sphere();
@@ -130,6 +138,12 @@ void setupWorld() {
 This actually runs the ray-tracing and saves the data to image[]
 ****************************************************************/
 void traceRays() {
+	//Only run for a single ray (DOES NOT SAVE IMAGE!)
+	//if (SINGLEX >= 0 && SINGLEY >= 0) {
+	//	
+	//	return;
+	//}
+	
 	for (int row = 0; row < HEIGHT; row++) {
 		//For progress, print off percentage every few rows
 		if (row % 20 == 0) {
@@ -156,7 +170,8 @@ void traceRays() {
 
 			//Recursively shoot ray and get back a color!
 			//Pass in 0 to represent that we have performed 0 iterations so far
-			Vec3 color = shootRay(ray,0);
+			//Pass in -1, meaning that this ray isn't bouncing off of any object.
+			Vec3 color = shootRay(ray,0,-1);
 
 			//Convert values of 0.0 to 1.0 to 0-255
 			color.x *= 255;
@@ -175,16 +190,21 @@ void traceRays() {
 /**Shoot a given ray at the scene and return
 a color.  This is recursive, so it could potentially go deeper!
 Only do up to 1000 recurses before deciding to return black!
+* 
+* fromObject is the index of the object that the ray is coming from
+* This makes sure we don't accidentally collide with ourself
 **/
-Vec3 shootRay(Ray ray, int iteration) {
+Vec3 shootRay(Ray ray, int iteration, int fromObject) {
 
 	//If we recursed too many times
-	if (iteration > 10) {
+	if (iteration > 100) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
 	//Loop over every object and check for collision!
 	for (unsigned int i = 0; i < objects.size(); i++) {
+		if ((int)i == fromObject) { continue; }	//Don't check collision with ourself
+		
 		Intersectable* object = objects.at(i);
 		
 		//printf("Ray/Sphere collision: Ray <%.2f,%.2f,%.2f><%.2f,%.2f,%.2f> Sphere[<%.2f,%.2f,%.2f> r:%.2f]\n",ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, sphere.pos.x, sphere.pos.y, sphere.pos.z, sphere.radius);
@@ -197,20 +217,23 @@ Vec3 shootRay(Ray ray, int iteration) {
 			//Calculate the normal of the sphere
 			Vec3 normal = object->getNormal(intersectionPoint);
 
+			//Return the normal for color
+			//return Vec3((normal.x + 1) / 2,(normal.y + 1) / 2,(normal.z + 1) / 2);
+	
 			//If we intersected with a reflective surface, bounce it!
 			//TODO: Go above and beyond!  Let reflective be a percentage!
 			Vec3 reflectiveColor = Vec3(0,0,0);
 			
 			//Only calculate if we are somewhat reflective
 			if (object->mat.reflective > 0) {
-				reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1);
+				reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1,i);
 			}
 			
 			//Let "p" be the percentage of this reflection
 			//Let "q" be 1-p
 			//This will be "p" % whatever this color is
 			//and q % regular diffuse!
-			reflectiveColor.multiplyByScalar(object->mat.reflective);
+			reflectiveColor = reflectiveColor.multiplyByScalar(object->mat.reflective);
 
 			//printf("Intersect at point <%.2f,%.2f,%.2f>\n",intersectionPoint.x, intersectionPoint.y, intersectionPoint.z);
 		
@@ -262,6 +285,6 @@ Vec3 shootRay(Ray ray, int iteration) {
 			return returnColor;
 		}
 	}
-	//Recurse!
-	return shootRay(ray, iteration+1);
+	//If we're not hitting something, return black!
+	return Vec3(0,0,0);	
 }

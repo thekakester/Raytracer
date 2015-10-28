@@ -15,6 +15,7 @@ Vec3 Ray::pointAtDistance(float d) {
 /**Reflects this ray off of a given point with a given normal
  */
 Ray Ray::reflect(Vec3 point, Vec3 normal) {
+	//http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
 	//Calculate a reflection vector
 	//r = incomingDirection - 2(incomingDirection . n)n
 	//Where n is normalized
