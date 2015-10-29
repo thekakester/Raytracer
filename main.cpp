@@ -8,12 +8,13 @@
 #include "vec3.h"
 #include "ray.h"
 #include "models.h"
+#include <cfloat>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 5120
+#define HEIGHT 5120
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -27,7 +28,7 @@ using namespace std;
 
 //PROTOTYPES START
 void traceRays();
-Vec3 shootRay(Ray, int, int);
+Vec3 shootRay(Ray, int, Intersectable*);
 void setupReferenceWorld();
 void setupCustomWorld();
 void setupFancyWorld();
@@ -110,7 +111,6 @@ void setupReferenceWorld() {
 
 	objects.push_back(sph1);
 	objects.push_back(sph2);
-	objects.push_back(sph3);
 
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
@@ -129,13 +129,13 @@ void setupReferenceWorld() {
 	right->mat = red;
 
 	//Add the triangles to our vector
+	objects.push_back(right);
 	objects.push_back(back1);
 	objects.push_back(back2);
 	objects.push_back(bot1);
 	objects.push_back(bot2);
-	objects.push_back(right);
+	objects.push_back(sph3);
 }
-
 
 void setupCustomWorld() {
 	
@@ -163,7 +163,7 @@ void setupCustomWorld() {
 }
 
 void setupFancyWorld() {
-	loadModel("bear.model",&objects);
+	loadModel("test.model",&objects);
 }
 
 void makeWater(int i, int j){
@@ -270,7 +270,7 @@ void *shoot_thread(void *data){
 	//Recursively shoot ray and get back a color!
 	//Pass in 0 to represent that we have performed 0 iterations so far
 	//Pass in -1, meaning that this ray isn't bouncing off of any object.
-	Vec3 color = shootRay(ray,0,-1);
+	Vec3 color = shootRay(ray,0,NULL);
 
 	//Convert values of 0.0 to 1.0 to 0-255
 	color.x *= 255;
@@ -292,107 +292,116 @@ Only do up to 1000 recurses before deciding to return black!
  * fromObject is the index of the object that the ray is coming from
  * This makes sure we don't accidentally collide with ourself
  **/
-Vec3 shootRay(Ray ray, int iteration, int fromObject) {
+Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 	//If we recursed too many times
 	if (iteration > 10) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
 	//Loop over every object and check for collision!
+	Intersectable* closest = NULL;
+	float closeDist = FLT_MAX;
 	for (unsigned int i = 0; i < objects.size(); i++) {
-		if ((int)i == fromObject) { continue; }	//Don't check collision with ourself
-
 		Intersectable* object = objects.at(i);
+		
+		if (object == fromObject) { continue; }	//Don't check collision with ourself
 
 		//printf("Ray/Sphere collision: Ray <%.2f,%.2f,%.2f><%.2f,%.2f,%.2f> Sphere[<%.2f,%.2f,%.2f> r:%.2f]\n",ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, sphere.pos.x, sphere.pos.y, sphere.pos.z, sphere.radius);
 
 		float d = object->intersectsRay(ray);
-
-		if (d >= 0) {
-			//Return the color of the sphere dotted with the normal
-			Vec3 intersectionPoint = ray.pointAtDistance(d);
-
-			//Calculate the normal of the sphere
-			Vec3 normal = object->getNormal(intersectionPoint);
-
-			//Return the normal for color
-			//return Vec3((normal.x + 1) / 2,(normal.y + 1) / 2,(normal.z + 1) / 2);
-
-			//If we intersected with a reflective surface, bounce it!
-			Vec3 reflectiveColor = Vec3(0,0,0);
-
-			//Only calculate if we are somewhat reflective
-			if (object->mat.reflective > 0) {
-				reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1,i);
-			}
-
-			//Let "p" be the percentage of this reflection
-			//Let "q" be 1-p
-			//This will be "p" % whatever this color is
-			//and q % regular diffuse!
-			reflectiveColor = reflectiveColor.multiplyByScalar(object->mat.reflective);
-
-			Vec3 transparentColor = Vec3(0,0,0);
-
-			//Only calculate if we are somewhat reflective
-			if (object->mat.transparent > 0) {
-				transparentColor = shootRay(ray,iteration+1,i);
-			}
-
-			//Let "p" be the percentage of this reflection
-			//Let "q" be 1-p
-			//This will be "p" % whatever this color is
-			//and q % regular diffuse!
-			transparentColor = transparentColor.multiplyByScalar(object->mat.transparent);
-
-			//Check if we can see the light
-			//Create a ray from the point to the light
-			Ray rayToLight = Ray(intersectionPoint,light);
-
-			float distToLight = rayToLight.origin.minus(light).magnitude();
-
-			bool seesLight = true;	//Set to false if intersects
-
-			//Check if we hit anything
-			for (unsigned int j = 0; j < objects.size(); j++) {
-				if (i==j) { continue; }
-
-				//If we intersect
-				float dist = objects.at(j)->intersectsRay(rayToLight);
-
-				if (dist > 0.0 && dist < distToLight) {
-					seesLight = false; //We failed!
-					break;
-				}
-			}
-
-			//Its time to calculate the color to return
-
-			//Ambient light!
-			Vec3 ambience = object->mat.color.multiplyByScalar(0.2f);
-			Vec3 diffuse = Vec3(0,0,0);
-
-			if (seesLight) {
-				//Dot the lightray with normal
-				float correlation = normal.dot(rayToLight.direction);
-				if (correlation < 0) { correlation = 0; }
-
-				//Diffuse is 80%!
-				diffuse = object->mat.color.multiplyByScalar(correlation * 0.8);
-			}
-
-			//The return color is:
-			// Reflection + (diffuse + ambient)
-			Vec3 returnColor = diffuse.add(ambience);
-
-			//How much of an impact does reflection have on this?
-			//(note, this does nothing if object is not reflective)
-			returnColor = returnColor.multiplyByScalar(1 - object->mat.reflective);
-			returnColor = returnColor.add(reflectiveColor);
-			returnColor = returnColor.multiplyByScalar(1 - object->mat.transparent);
-			returnColor = returnColor.add(transparentColor);
-			return returnColor;
+		if (d >= 0 && d < closeDist) {
+			closeDist = d;
+			closest = object;
 		}
+	}
+	
+	//If we intersected something...
+	if (closest != NULL) {
+		//Return the color of the sphere dotted with the normal
+		Vec3 intersectionPoint = ray.pointAtDistance(closeDist);
+
+		//Calculate the normal of the sphere
+		Vec3 normal = closest->getNormal(intersectionPoint);
+
+		//Return the normal for color
+		//return Vec3((normal.x + 1) / 2,(normal.y + 1) / 2,(normal.z + 1) / 2);
+
+		//If we intersected with a reflective surface, bounce it!
+		Vec3 reflectiveColor = Vec3(0,0,0);
+
+		//Only calculate if we are somewhat reflective
+		if (closest->mat.reflective > 0) {
+			reflectiveColor = shootRay(ray.reflect(intersectionPoint,normal),iteration+1, closest);
+		}
+
+		//Let "p" be the percentage of this reflection
+		//Let "q" be 1-p
+		//This will be "p" % whatever this color is
+		//and q % regular diffuse!
+		reflectiveColor = reflectiveColor.multiplyByScalar(closest->mat.reflective);
+
+		Vec3 transparentColor = Vec3(0,0,0);
+
+		//Only calculate if we are somewhat reflective
+		if (closest->mat.transparent > 0) {
+			transparentColor = shootRay(ray,iteration+1,closest);
+		}
+
+		//Let "p" be the percentage of this reflection
+		//Let "q" be 1-p
+		//This will be "p" % whatever this color is
+		//and q % regular diffuse!
+		transparentColor = transparentColor.multiplyByScalar(closest->mat.transparent);
+
+		//Check if we can see the light
+		//Create a ray from the point to the light
+		Ray rayToLight = Ray(intersectionPoint,light);
+
+		float distToLight = rayToLight.origin.minus(light).magnitude();
+
+		bool seesLight = true;	//Set to false if intersects
+
+		//Check if we hit anything
+		for (unsigned int j = 0; j < objects.size(); j++) {
+			//Don't check collision with ourself
+			Intersectable* other = objects.at(j);
+			if (other == closest) { continue; }
+
+			//If we intersect
+			float dist = other->intersectsRay(rayToLight);
+
+			if (dist > 0.0 && dist < distToLight) {
+				seesLight = false; //We failed!
+				break;
+			}
+		}
+
+		//Its time to calculate the color to return
+
+		//Ambient light!
+		Vec3 ambience = closest->mat.color.multiplyByScalar(0.2f);
+		Vec3 diffuse = Vec3(0,0,0);
+
+		if (seesLight) {
+			//Dot the lightray with normal
+			float correlation = normal.dot(rayToLight.direction);
+			if (correlation < 0) { correlation = 0; }
+
+			//Diffuse is 80%!
+			diffuse = closest->mat.color.multiplyByScalar(correlation * 0.8);
+		}
+
+		//The return color is:
+		// Reflection + (diffuse + ambient)
+		Vec3 returnColor = diffuse.add(ambience);
+
+		//How much of an impact does reflection have on this?
+		//(note, this does nothing if object is not reflective)
+		returnColor = returnColor.multiplyByScalar(1 - closest->mat.reflective);
+		returnColor = returnColor.add(reflectiveColor);
+		returnColor = returnColor.multiplyByScalar(1 - closest->mat.transparent);
+		returnColor = returnColor.add(transparentColor);
+		return returnColor;
 	}
 	//If we're not hitting something, return black!
 	return Vec3(0,0,0);	
