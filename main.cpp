@@ -7,6 +7,7 @@
 #include "sphere.h"
 #include "vec3.h"
 #include "ray.h"
+#include "models.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -29,6 +30,7 @@ void traceRays();
 Vec3 shootRay(Ray, int, int);
 void setupReferenceWorld();
 void setupCustomWorld();
+void setupFancyWorld();
 void makeWater(int i, int j);
 void *shoot_thread(void *data);
 //PROTOTYPES END!
@@ -48,17 +50,19 @@ int main(int argc, char** argv) {
 	if(argc > 1 && strcmp(argv[1], "custom") == 0){
 		setupCustomWorld();	//Execute our cutom world
 		filename = "custom.png";
-	}else{
+	}else if (argc > 1 && strcmp(argv[1],"fancy") == 0){
+		setupFancyWorld();
+		filename = "fancy.png";
+	} else {
 		setupReferenceWorld();	//Execute Dr. Kuhl's code from the assignment
 		filename = "reference.png";
 	}
-	printf("\e[1ABuilding scene... Done!\n");
 
 	cout << "Tracing rays...\n";
 
 	traceRays();
 
-	printf("\e[1ATracing rays... Done!\n");
+	//printf("\e[1ATracing rays... Done!\n");
 
 	cout << "Saving image to " << filename << "... ";
 	stbi_write_png(filename.c_str(), WIDTH, HEIGHT, 3, image, WIDTH*3);
@@ -158,6 +162,10 @@ void setupCustomWorld() {
 	objects.push_back(bot2);
 }
 
+void setupFancyWorld() {
+	loadModel("bear.model",&objects);
+}
+
 void makeWater(int i, int j){
 	// water
 	Triangle* waterTri[14];
@@ -202,6 +210,8 @@ void makeWater(int i, int j){
 This actually runs the ray-tracing and saves the data to image[]
  ****************************************************************/
 void traceRays() {
+	printf("%d Objects in scene\n",(int)objects.size());
+	
 	int threadCount = 4;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -210,7 +220,7 @@ void traceRays() {
 	for (int row = 0; row < HEIGHT; row++) {
 		//For progress, print off percentage every few rows
 		if (row % 20 == 0) {
-			printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
+			//printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
 		}
 		int increment = 0;
 		for (int col = 0; col < WIDTH; col+=increment) {
