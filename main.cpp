@@ -29,9 +29,7 @@ void traceRays();
 Vec3 shootRay(Ray, int, int);
 void setupReferenceWorld();
 void setupCustomWorld();
-void makeGrass();
 void makeWater(int i, int j);
-float randFloat(float low, float high);
 void *shoot_thread(void *data);
 //PROTOTYPES END!
 
@@ -136,39 +134,27 @@ void setupReferenceWorld() {
 
 
 void setupCustomWorld() {
-
-	int grass = 1000;
-
-	std::srand(300);
-	for(int i = 0; i < grass; i++){
-		makeGrass();
-		printf("\e[1ABuilding scene... %d%%\n", (int)((i*100.0f)/(grass+16)));
-	}
-
+	
 	int j = 15;
 	for(int i = 1; i <= 7; i++){
 		makeWater(i, j--);
-		printf("\e[1ABuilding scene... %d%%\n", (int)(((i+grass)*100.0f)/(grass+16)));
 	}
 
 	j = 7;
 	for(int i = 9; i <= 15; i++){
 		makeWater(i, j--);
-		printf("\e[1ABuilding scene... %d%%\n", (int)(((i+grass)*100.0f)/(grass+16)));
 	}
 
-	Material white;
-	white.reflective = 0.0f;
-	white.color = Vec3(1,1,1);
-
+	Material grass_mat;
+	grass_mat.color = Vec3(0.1f,0.6f,0.0f);
+	
 	// floor
 	Triangle* bot1 = new Triangle(Vec3(-10,-2.1,-20), Vec3(10,-2.1,-1), Vec3(10,-2.1,-20));
-	bot1->mat = white;
+	bot1->mat = grass_mat;
 	objects.push_back(bot1);
-	printf("\e[1ABuilding scene... %d%%\n", 99);
 
 	Triangle* bot2 = new Triangle(Vec3(-10,-2.1,-20), Vec3(-10,-2.1,-1), Vec3(10,-2.1,-1));
-	bot2->mat = white;
+	bot2->mat = grass_mat;
 	objects.push_back(bot2);
 }
 
@@ -212,23 +198,6 @@ void makeWater(int i, int j){
 
 }
 
-void makeGrass(){
-	Material grass_mat;
-	grass_mat.color = Vec3(0.1f,0.8f,0.0f);
-
-	Vec3 base(randFloat(-10.0f, 10.0f),-2.1,randFloat(-20.0f, -1.0f));
-
-	Vec3 a(base.x + 0.05f, base.y, base.z);
-	Vec3 b(base.x - 0.05f, base.y, base.z);
-	Vec3 c(base.x + 0.05f, base.y + 0.2f, base.z);
-	Triangle* t = new Triangle(a, b, c);
-	t->mat = grass_mat;
-	objects.push_back(t);
-}
-
-float randFloat(float low, float high){
-	return low + static_cast <float> (std::rand()) /( static_cast <float> (RAND_MAX/(high-low)));
-}
 /****************************************************************
 This actually runs the ray-tracing and saves the data to image[]
  ****************************************************************/
