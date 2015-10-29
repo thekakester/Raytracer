@@ -7,6 +7,7 @@ class Material {
 public:
 	Material();
 	float reflective;
+	float transparent;
 	Vec3 color;
 };
 #endif
