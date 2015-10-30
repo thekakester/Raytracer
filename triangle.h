@@ -10,6 +10,7 @@ public:
 	Triangle(Vec3 p1, Vec3 p2, Vec3 p3);
 	float intersectsRay(Ray ray) override;
 	Vec3 getNormal(Vec3 intersect) override;
+	int ignoreNegativeDiffuse();
 
 	//Apparently we can't initialize arrays pre c++11,
 	//so we'll do it this way since we only have 3!

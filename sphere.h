@@ -13,6 +13,7 @@ public:
 	Vec3 getNormal(Vec3 intersect) override;
 	float radius;
 	Vec3 pos;
+	int ignoreNegativeDiffuse();
 
 protected:
 	~Sphere(){}

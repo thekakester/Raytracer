@@ -13,8 +13,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 2000
+#define HEIGHT 2000
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -173,10 +173,19 @@ void setupCustomWorld() {
 
 void setupFancyWorld() {
 	Material mat = Material();
-	mat.color = Vec3(0.0f,0.5f,0.0f);
-	mat.reflective = 0;
+	mat.color = Vec3(1.0f,1.0f,1.0f);
+	mat.reflective = 0.2f;
 	mat.transparent = 0;
-	loadModel("bs.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,(M_PI / 4),0), Vec3(0,-10,-30),mat);
+	loadModel("bs.model",&objects, Vec3(1/20.0f,1/20.0f,1/20.0f), Vec3(0,0,0), Vec3(0,-1,-15),mat);
+
+	Material mat2 = Material();
+	mat2.color = Vec3(0.5f,0.5f,0.0f);
+	mat2.reflective = 0.2f;
+	mat2.transparent = 0;
+	loadModel("alley.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,0,0), Vec3(0,-1,0),mat2);
+
+
+
 }
 
 void makeWater(int i, int j){
@@ -398,6 +407,12 @@ Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 		if (seesLight) {
 			//Dot the lightray with normal
 			float correlation = normal.dot(rayToLight.direction);
+			
+			//Triangles can be the absolute value of this
+			if (closest->ignoreNegativeDiffuse() == 1) {
+				correlation = fabs(correlation);
+			}
+			
 			if (correlation < 0) { correlation = 0; }
 
 			//Diffuse is 80%!

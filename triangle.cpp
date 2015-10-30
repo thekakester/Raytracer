@@ -66,4 +66,8 @@ float Triangle::intersectsRay(Ray ray) {
 Vec3 Triangle::getNormal(Vec3 intersect){
     return v2.minus(v1).cross(v3.minus(v1)).normalize();
 }
+
+int Triangle::ignoreNegativeDiffuse() {
+	return 1;
+}
 #endif
