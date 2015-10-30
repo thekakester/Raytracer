@@ -3,6 +3,6 @@
 
 #include "material.h"
 
-Material::Material() : reflective(0.0f), transparent(0.0f), color(0.5f,0.5f,0.5f){
+Material::Material() : reflective(0.0f), transparent(0.0f), color(0.5f,0.5f,0.5f), reflectiveScatter(0){
 }
 #endif

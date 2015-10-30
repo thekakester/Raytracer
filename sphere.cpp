@@ -50,4 +50,8 @@ Vec3 Sphere::getNormal(Vec3 intersect){
     return intersect.minus(pos).normalize();
 }
 
+int Sphere::ignoreNegativeDiffuse() {
+	return 0;
+}
+
 #endif

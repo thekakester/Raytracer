@@ -1,6 +1,6 @@
 CC = g++
 FLAGS = -Wall -std=c++11 -lm -pthread
-OBJS = vec3.o ray.o material.o sphere.o triangle.o stb_image_write.o main.o
+OBJS = vec3.o ray.o material.o sphere.o triangle.o stb_image_write.o main.o #models.o
 EXE = ray
 .SUFFIXES: .c .o .h   # Define our suffix list
 
