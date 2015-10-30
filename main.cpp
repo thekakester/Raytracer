@@ -2,6 +2,7 @@
 #include <vector>
 #include <math.h>
 #include <pthread.h>
+#include <random>
 #include "triangle.h"
 #include "intersectable.h"
 #include "sphere.h"
@@ -13,8 +14,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 2000
-#define HEIGHT 2000
+#define WIDTH 512
+#define HEIGHT 512
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -31,8 +32,8 @@ void traceRays();
 Vec3 shootRay(Ray, int, Intersectable*);
 void setupReferenceWorld();
 void setupCustomWorld();
-void makeWater();
 void setupFancyWorld();
+float randFloat(float low, float high);
 void *shoot_thread(void *data);
 //PROTOTYPES END!
 
@@ -147,63 +148,31 @@ void setupReferenceWorld() {
 }
 
 void setupCustomWorld() {
-
-	makeWater();
-
-	Material dirt_mat;
-	dirt_mat.color = Vec3(0.2f,0.2f,0.0f);
-
-	// floor
-	Triangle* bot1 = new Triangle(Vec3(-10,-2.3,-20), Vec3(10,-2.1,-1), Vec3(10,-2.1,-20));
-	bot1->mat = dirt_mat;
-	objects.push_back(bot1);
-
-	Triangle* bot2 = new Triangle(Vec3(-10,-2.4,-20), Vec3(-10,-2.1,-1), Vec3(10,-2.1,-1));
-	bot2->mat = dirt_mat;
-	objects.push_back(bot2);
-}
-
-void setupFancyWorld() {
-	/*Material mat = Material();
-	mat.color = Vec3(1.0f,1.0f,1.0f);
-	mat.reflective = 0.2f;
-	mat.transparent = 0;
-	loadModel("bs.model",&objects, Vec3(1/20.0f,1/20.0f,1/20.0f), Vec3(0,0,0), Vec3(0,-1,-15),mat);
-
-	Material mat2 = Material();
-	mat2.color = Vec3(0.5f,0.5f,0.0f);
-	mat2.reflective = 0.2f;
-	mat2.transparent = 0;
-	loadModel("alley.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,0,0), Vec3(0,-1,0),mat2);*/
-
-}
-
-void makeWater(){
 	// water
 	Triangle* waterTri[14];
 	Vec3 verts[16]{
-		Vec3(0.0f,-2.0f,-5.0f),
-		Vec3(1.0f,-2.0f,-5.5f),
-		Vec3(2.2f,-2.0f,-7.5f),
-		Vec3(2.4f,-2.0f,-9.5f),
-		Vec3(1.7f,-2.0f,-11.8f),
-		Vec3(2.4f,-2.0f,-13.6f),
-		Vec3(2.6f,-2.0f,-16.0f),
-		Vec3(2.0f,-2.0f,-17.1f),
-		Vec3(0.0f,-2.0f,-17.5f),
-		Vec3(-2.0f,-2.0f,-17.0f),
-		Vec3(-3.4f,-2.0f,-15.8f),
-		Vec3(-3.4f,-2.0f,-15.9f),
-		Vec3(-3.0f,-2.0f,-12.0f),
-		Vec3(-2.8f,-2.0f,-10.5f),
-		Vec3(-2.5f,-2.0f,-9.5f),
-		Vec3(-1.0f,-2.0f,-5.5f)
+		Vec3(0.0f,-2.1f,-2.0f),
+		Vec3(1.0f,-2.1f,-2.5f),
+		Vec3(2.2f,-2.1f,-4.5f),
+		Vec3(2.4f,-2.1f,-6.5f),
+		Vec3(1.7f,-2.1f,-8.8f),
+		Vec3(2.4f,-2.1f,-10.6f),
+		Vec3(2.6f,-2.1f,-12.0f),//
+		Vec3(2.0f,-2.1f,-14.1f),
+		Vec3(0.0f,-2.1f,-14.5f),
+		Vec3(-2.0f,-2.1f,-14.0f),
+		Vec3(-3.4f,-2.1f,-12.8f),//
+		Vec3(-3.4f,-2.1f,-11.4f),//
+		Vec3(-3.0f,-2.1f,-9.0f),
+		Vec3(-2.8f,-2.1f,-7.5f),
+		Vec3(-2.5f,-2.1f,-6.5f),
+		Vec3(-1.0f,-2.1f,-2.5f)
 	};
 
 	Material water_mat;
 	water_mat.reflective = 0.8f;
-	water_mat.transparent = 0.3f;
-	water_mat.color = Vec3(0.0,0.2f,1.0f);
+	water_mat.transparent = 0.7f;
+	water_mat.color = Vec3(0.4,0.4f,1.0f);
 
 	int j = 15;
 	for(int i = 1; i <= 7; i++){
@@ -227,49 +196,102 @@ void makeWater(){
 	Triangle* grass[20];
 
 	grass[0] = new Triangle(a, verts[0], b);
-	printf("a, 0, b\n");
 	for(int i = 0; i <= 5; i++){
 		grass[i+1] = new Triangle(verts[i], verts[i+1], b);
-		printf("%d, %d, b\n", i, (i+1) % 15);
 	}
 
 	grass[7] = new Triangle(b, verts[6], c);
-	printf("a, 6, b\n");
 	for(int i = 6; i <= 8; i++){
 		grass[i+2] = new Triangle(verts[i], verts[i+1], c);
-		printf("%d, %d, c\n", i, (i+1) % 15);
 	}
 
 	grass[11] = new Triangle(c, verts[9], d);
-	printf("c, 9, d\n");
 	for(int i = 9; i <= 11; i++){
 		grass[i+3] = new Triangle(verts[i], verts[i+1], d);
-		printf("%d, %d, d\n", i, (i+1) % 15);
 	}
 
 	grass[15] = new Triangle(d, verts[12], a);
-	printf("d, 12, a\n");
 	for(int i = 12; i <= 15; i++){
 		grass[i+4] = new Triangle(verts[i], verts[(i+1) % 16], a);
-		printf("%d, %d, a\n", i, (i+1) % 16);
 	}
 
 	Material grass_mat;
-	grass_mat.color = Vec3(0.2f,0.8f,0.1f);
+	grass_mat.color = Vec3(0.1f,0.3f,0.1f);
 
 	for(int i = 0; i < 20; i++){
 		grass[i]->mat = grass_mat;
 		objects.push_back(grass[i]);
 	}
+
+	Material sky_mat;
+	sky_mat.color = Vec3(.001,.001,.1);
+	sky_mat.transparent = 0.0f;
+
+	Triangle* sky1 = new Triangle(Vec3(-10,-2,-20), Vec3(10,-2,-20), Vec3(10,10,-20));
+	sky1->mat = sky_mat;
+	Triangle* sky2 = new Triangle(Vec3(-10,-2,-20), Vec3(10,10,-20), Vec3(-10,10,-20));
+	sky2->mat = sky_mat;
+	objects.push_back(sky1);
+	objects.push_back(sky2);
+
+
+	Material dirt_mat;
+	dirt_mat.color = Vec3(0.2f,0.2f,0.0f);
+
+	// floor
+	Triangle* dirt1 = new Triangle(Vec3(-10,-2.4,-20), Vec3(10,-2.4,-1), Vec3(10,-2.4,-20));
+	dirt1->mat = dirt_mat;
+	objects.push_back(dirt1);
+
+	Triangle* dirt2 = new Triangle(Vec3(-10,-2.4,-20), Vec3(-10,-2.4,-1), Vec3(10,-2.4,-1));
+	dirt2->mat = dirt_mat;
+	objects.push_back(dirt2);
+
+
+	Material moon_mat;
+	moon_mat.color = Vec3(1.0,1.0f,0.81f);
+
+	Sphere* moon = new Sphere();
+	moon->pos = Vec3(3,5,-21);
+	moon->radius = 2;
+	moon->mat = moon_mat;
+	objects.push_back(moon);
+
+	srand(300);
+	for(int i = 0; i < 100; i++){
+		Sphere* star = new Sphere();
+		star->pos = Vec3(randFloat(-10.0f,10.0f), randFloat(-1.8f, 10.0f),randFloat(-20.4999f,-20.496f));
+		star->radius = .5;
+		star->mat = moon_mat;
+		objects.push_back(star);
+	}
+
+}
+
+float randFloat(float low, float high){
+	return low + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(high-low)));
+}
+
+void setupFancyWorld() {
+	/*Material mat = Material();
+	mat.color = Vec3(1.0f,1.0f,1.0f);
+	mat.reflective = 0.2f;
+	mat.transparent = 0;
+	loadModel("bs.model",&objects, Vec3(1/20.0f,1/20.0f,1/20.0f), Vec3(0,0,0), Vec3(0,-1,-15),mat);
+
+	Material mat2 = Material();
+	mat2.color = Vec3(0.5f,0.5f,0.0f);
+	mat2.reflective = 0.2f;
+	mat2.transparent = 0;
+	loadModel("alley.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,0,0), Vec3(0,-1,0),mat2);*/
+
 }
 
 /****************************************************************
 This actually runs the ray-tracing and saves the data to image[]
  ****************************************************************/
 void traceRays() {
-	printf("%d Objects in scene\n",(int)objects.size());
-	
-	int threadCount = 16;
+	int threadCount = 8;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -351,7 +373,7 @@ Only do up to 1000 recurses before deciding to return black!
  **/
 Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 	//If we recursed too many times
-	if (iteration > 100) {
+	if (iteration > 10) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
