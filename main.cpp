@@ -13,8 +13,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 5120
-#define HEIGHT 5120
+#define WIDTH 512
+#define HEIGHT 512
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
 	traceRays();
 
-	//printf("\e[1ATracing rays... Done!\n");
+	printf("\e[1ATracing rays... Done!\n");
 
 	cout << "Saving image to " << filename << "... ";
 	stbi_write_png(filename.c_str(), WIDTH, HEIGHT, 3, image, WIDTH*3);
@@ -109,14 +109,19 @@ void setupReferenceWorld() {
 	sph3->radius = 1;
 	sph3->mat = red;
 
-	objects.push_back(sph1);
-	objects.push_back(sph2);
+	
 
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
 	back1->mat = blue;
 	Triangle* back2 = new Triangle(Vec3(-8,-2,-20), Vec3(8,10,-20), Vec3(-8,10,-20));
 	back2->mat = blue;
+	
+	// Wall behind camera (easter egg if transparency is on
+	Triangle* camback1 = new Triangle(Vec3(-8,-2,1), Vec3(8,-2,1), Vec3(8,10,1));
+	camback1->mat = blue;
+	Triangle* camback2 = new Triangle(Vec3(-8,-2,1), Vec3(8,10,1), Vec3(-8,10,1));
+	camback2->mat = blue;
 
 	// floor
 	Triangle* bot1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-10), Vec3(8,-2,-20));
@@ -132,9 +137,13 @@ void setupReferenceWorld() {
 	objects.push_back(right);
 	objects.push_back(back1);
 	objects.push_back(back2);
+	//objects.push_back(camback1);
+	//objects.push_back(camback2);
 	objects.push_back(bot1);
 	objects.push_back(bot2);
 	objects.push_back(sph3);
+	objects.push_back(sph1);
+	objects.push_back(sph2);
 }
 
 void setupCustomWorld() {
@@ -163,7 +172,11 @@ void setupCustomWorld() {
 }
 
 void setupFancyWorld() {
-	loadModel("test.model",&objects);
+	Material mat = Material();
+	mat.color = Vec3(0.0f,0.5f,0.0f);
+	mat.reflective = 0;
+	mat.transparent = 0;
+	loadModel("bs.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,(M_PI / 4),0), Vec3(0,-10,-30),mat);
 }
 
 void makeWater(int i, int j){
@@ -212,7 +225,7 @@ This actually runs the ray-tracing and saves the data to image[]
 void traceRays() {
 	printf("%d Objects in scene\n",(int)objects.size());
 	
-	int threadCount = 4;
+	int threadCount = 16;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -220,7 +233,7 @@ void traceRays() {
 	for (int row = 0; row < HEIGHT; row++) {
 		//For progress, print off percentage every few rows
 		if (row % 20 == 0) {
-			//printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
+			printf("\e[1ATracing rays... %d%%\n", (int)((row*100.0f)/HEIGHT));
 		}
 		int increment = 0;
 		for (int col = 0; col < WIDTH; col+=increment) {
@@ -294,7 +307,7 @@ Only do up to 1000 recurses before deciding to return black!
  **/
 Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 	//If we recursed too many times
-	if (iteration > 10) {
+	if (iteration > 100) {
 		return Vec3(0,0,0);		//Return black!
 	}
 

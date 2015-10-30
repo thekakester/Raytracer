@@ -9,5 +9,6 @@ public:
 	float reflective;
 	float transparent;
 	Vec3 color;
+	float reflectiveScatter;
 };
 #endif
