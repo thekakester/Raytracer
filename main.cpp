@@ -8,14 +8,14 @@
 #include "sphere.h"
 #include "vec3.h"
 #include "ray.h"
-//#include "models.h"
+#include "models.h"
 #include <cfloat>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 2000
+#define HEIGHT 2000
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -110,8 +110,6 @@ void setupReferenceWorld() {
 	sph3->radius = 1;
 	sph3->mat = red;
 
-	
-
 	// back wall
 	Triangle* back1 = new Triangle(Vec3(-8,-2,-20), Vec3(8,-2,-20), Vec3(8,10,-20));
 	back1->mat = blue;
@@ -145,6 +143,20 @@ void setupReferenceWorld() {
 	objects.push_back(sph3);
 	objects.push_back(sph1);
 	objects.push_back(sph2);
+}
+
+void setupFancyWorld() {
+	Material mat = Material();
+	mat.color = Vec3(1.0f,1.0f,1.0f);
+	mat.reflective = 0.2f;
+	mat.transparent = 0;
+	loadModel("bs.model",&objects, Vec3(1/20.0f,1/20.0f,1/20.0f), Vec3(0,0,0), Vec3(0,-1,-15),mat);
+
+	Material mat2 = Material();
+	mat2.color = Vec3(0.5f,0.5f,0.0f);
+	mat2.reflective = 0.2f;
+	mat2.transparent = 0;
+	loadModel("alley.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,0,0), Vec3(0,-1,0),mat2);
 }
 
 void setupCustomWorld() {
@@ -272,26 +284,13 @@ float randFloat(float low, float high){
 	return low + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(high-low)));
 }
 
-void setupFancyWorld() {
-	/*Material mat = Material();
-	mat.color = Vec3(1.0f,1.0f,1.0f);
-	mat.reflective = 0.2f;
-	mat.transparent = 0;
-	loadModel("bs.model",&objects, Vec3(1/20.0f,1/20.0f,1/20.0f), Vec3(0,0,0), Vec3(0,-1,-15),mat);
-
-	Material mat2 = Material();
-	mat2.color = Vec3(0.5f,0.5f,0.0f);
-	mat2.reflective = 0.2f;
-	mat2.transparent = 0;
-	loadModel("alley.model",&objects, Vec3(0.5f,0.5f,0.5f), Vec3(0,0,0), Vec3(0,-1,0),mat2);*/
-
-}
-
 /****************************************************************
 This actually runs the ray-tracing and saves the data to image[]
  ****************************************************************/
 void traceRays() {
 	int threadCount = 8;
+	printf("%d Objects in scene\n",(int)objects.size());
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -373,7 +372,7 @@ Only do up to 1000 recurses before deciding to return black!
  **/
 Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 	//If we recursed too many times
-	if (iteration > 10) {
+	if (iteration > 100) {
 		return Vec3(0,0,0);		//Return black!
 	}
 
