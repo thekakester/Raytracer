@@ -13,8 +13,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define WIDTH 2000
-#define HEIGHT 2000
+#define WIDTH 512
+#define HEIGHT 512
 
 //Set SINGLEX and SINGLEY to a (x,y) coordinate to only run the
 //ray tracer for a specific pixel of the output image.  This is good
@@ -89,7 +89,7 @@ void setupReferenceWorld() {
 	red.reflective = 0.0f;
 	red.color = Vec3(1,0,0);
 	Material blue;
-	blue.reflective = 0.0f;
+	blue.reflective = 0.9f;
 	blue.color = Vec3(0,0,1);
 	Material white;
 	white.reflective = 0.0f;
@@ -137,12 +137,12 @@ void setupReferenceWorld() {
 	objects.push_back(right);
 	objects.push_back(back1);
 	objects.push_back(back2);
-	//objects.push_back(camback1);
-	//objects.push_back(camback2);
+	objects.push_back(camback1);
+	objects.push_back(camback2);
 	objects.push_back(bot1);
 	objects.push_back(bot2);
 	objects.push_back(sph3);
-	objects.push_back(sph1);
+	//objects.push_back(sph1);
 	objects.push_back(sph2);
 }
 
@@ -432,5 +432,5 @@ Vec3 shootRay(Ray ray, int iteration, Intersectable* fromObject) {
 		return returnColor;
 	}
 	//If we're not hitting something, return black!
-	return Vec3(0,0,0);	
+	return Vec3(1,1,1);	
 }
